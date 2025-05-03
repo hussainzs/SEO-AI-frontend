@@ -2,12 +2,82 @@
 
 /* Define custom theme configurations for Tailwind CSS */
 @theme {
-    --font-sans: "Space Grotesk", system-ui, sans-serif;
+  --font-sans: 'Space Grotesk', system-ui, sans-serif;
+  --color-primary: #da7756;
+  --color-primary-light: rgba(218, 119, 86, 0.15);
+  --color-primary-medium: rgba(218, 119, 86, 0.3);
+  --color-background: #eeece2;
+  --color-text: #3d3929;
+  --color-text-secondary: rgba(61, 57, 41, 0.7);
+  --color-border: rgba(61, 57, 41, 0.15);
+  --color-white: #ffffff;
+  --color-light-bg: #f8f7f2;
+  --color-verified: #15803d;
+  --color-verified-bg: rgba(21, 128, 61, 0.1);
+  --color-contradicted: #b91c1c;
+  --color-contradicted-bg: rgba(185, 28, 28, 0.1);
+  --color-additional: #1d4ed8;
+  --color-additional-bg: rgba(29, 78, 216, 0.1);
+
+  /* Custom Keyframes Definitions */
+  /* Keyframes are defined directly within @theme in v4 */
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+
+  /* Note: Defining animation *utilities* (like animate-*) */
+  /* within @theme has specific syntax if needed. */
+  /* For now, we define keyframes here and apply via separate CSS classes below. */
 }
 
-/* Apply base styles to the body element */
 body {
-    /* Apply the 'font-sans' utility class, making 'Space Grotesk' the default font */
-    @apply font-sans;
+  /* Apply the 'font-sans' utility class, making 'Space Grotesk' the default font */
+  @apply font-sans;
+
+  /* Apply background and text colors using the variables defined in @theme */
+  background-color: var(--color-background);
+  color: var(--color-text);
 }
 
+/* Custom Utility Classes (outside @theme) */
+/* These classes use the CSS variables defined in @theme */
+.text-primary {
+  color: var(--color-primary);
+}
+.bg-primary {
+  background-color: var(--color-primary);
+}
+.bg-primary-light {
+  background-color: var(--color-primary-light);
+}
+.border-primary {
+  border-color: var(--color-primary);
+}
+.text-verified {
+  color: var(--color-verified);
+}
+.bg-verified {
+  background-color: var(--color-verified-bg);
+}
+.text-contradicted {
+  color: var(--color-contradicted);
+}
+.bg-contradicted {
+  background-color: var(--color-contradicted-bg);
+}
+.text-additional {
+  color: var(--color-additional);
+}
+.bg-additional {
+  background-color: var(--color-additional-bg);
+}
+
+/* Apply animations using standard CSS classes referencing the keyframes */
+.animate-fade-in {
+  animation: fadeIn 0.5s ease-in-out;
+}
