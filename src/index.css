@@ -1,1 +1,13 @@
 @import 'tailwindcss';
+
+/* Define custom theme configurations for Tailwind CSS */
+@theme {
+    --font-sans: "Space Grotesk", system-ui, sans-serif;
+}
+
+/* Apply base styles to the body element */
+body {
+    /* Apply the 'font-sans' utility class, making 'Space Grotesk' the default font */
+    @apply font-sans;
+}
+
