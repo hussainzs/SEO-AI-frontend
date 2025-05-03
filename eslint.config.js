@@ -48,10 +48,11 @@ export default tseslint.config(
 
   // Prettier configuration - MUST come after other configs that might conflict
   pluginPrettierRecommended, // Enables eslint-plugin-prettier and sets prettier/prettier rule to 'error'
-  // Add this object to override the Prettier rule severity
+  // Add this object to override the Prettier rule severity and configure line endings
   {
     rules: {
-      'prettier/prettier': 'warn', // Set Prettier rule severity to warning
+      // Set Prettier rule severity to warning and configure line endings
+      'prettier/prettier': ['warn', { endOfLine: 'auto' }],
     },
   },
   eslintConfigPrettier // Disables ESLint rules that conflict with Prettier

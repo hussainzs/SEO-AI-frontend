@@ -1,5 +1,4 @@
 @import 'tailwindcss';
-
 /* Define custom theme configurations for Tailwind CSS */
 @theme {
   --font-sans: 'Space Grotesk', system-ui, sans-serif;
@@ -18,7 +17,6 @@
   --color-contradicted-bg: rgba(185, 28, 28, 0.1);
   --color-additional: #1d4ed8;
   --color-additional-bg: rgba(29, 78, 216, 0.1);
-
   /* Custom Keyframes Definitions */
   /* Keyframes are defined directly within @theme in v4 */
   @keyframes fadeIn {
@@ -29,21 +27,24 @@
       opacity: 1;
     }
   }
-
-  /* Note: Defining animation *utilities* (like animate-*) */
-  /* within @theme has specific syntax if needed. */
-  /* For now, we define keyframes here and apply via separate CSS classes below. */
+  @keyframes slideIn {
+    from {
+      transform: translateY(20px);
+      opacity: 0;
+    }
+    to {
+      transform: translateY(0);
+      opacity: 1;
+    }
+  }
 }
-
 body {
   /* Apply the 'font-sans' utility class, making 'Space Grotesk' the default font */
   @apply font-sans;
-
   /* Apply background and text colors using the variables defined in @theme */
   background-color: var(--color-background);
   color: var(--color-text);
 }
-
 /* Custom Utility Classes (outside @theme) */
 /* These classes use the CSS variables defined in @theme */
 .text-primary {
@@ -76,8 +77,50 @@ body {
 .bg-additional {
   background-color: var(--color-additional-bg);
 }
-
+/* ──────── Shadows ───────────────────────────────────────────────────────── */
+.shadow-header {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
 /* Apply animations using standard CSS classes referencing the keyframes */
 .animate-fade-in {
   animation: fadeIn 0.5s ease-in-out;
+}
+.animate-slide-in {
+  animation: slideIn 0.3s ease-out forwards;
+}
+/* ──────── Buttons ───────────────────────────────────────────────────────── */
+.btn {
+  @apply font-medium rounded-md cursor-pointer transition-all duration-200 ease-in-out;
+}
+.btn-primary {
+  @apply bg-primary text-white py-2 px-4;
+}
+.btn-primary:hover {
+  background-color: rgba(218, 119, 86, 0.9);
+}
+.btn-primary:active {
+  @apply scale-95;
+}
+/* ──────── Inputs ────────────────────────────────────────────────────────── */
+.input-base {
+  @apply w-full border border-border rounded-md p-4 resize-none
+         focus:outline-none focus:ring-2 focus:ring-primary;
+  background-color: var(--color-white);
+}
+/* ──────── Cards ─────────────────────────────────────────────────────────── */
+.card {
+  @apply bg-white p-6 rounded-md shadow-md my-4 w-full;
+  background-color: var(--color-white);
+}
+/* ──────── "User" Tag ────────────────────────────────────────────────────── */
+.tag-user {
+  @apply inline-flex items-center justify-center
+         bg-primary text-white rounded-full
+         w-8 h-8 text-xs font-semibold;
+}
+/* ───────── Card controls ─────────────────────────────────────────────────── */
+.card-toggle {
+  @apply text-sm text-text-secondary font-medium py-1 px-3 
+         rounded-md hover:bg-primary-light transition-colors 
+         cursor-pointer flex items-center gap-1;
 }
