@@ -1,54 +1,102 @@
-# React + TypeScript + Vite
+# SEO AI Frontend
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Frontend of AI SEO agent for News Media Organizations
 
-Currently, two official plugins are available:
+## Project Setup
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+This project uses [Vite](https://vitejs.dev/), [React](https://react.dev/), [TypeScript](https://www.typescriptlang.org/), and [Tailwind CSS v4](https://tailwindcss.com/). It also includes configurations for [ESLint](https://eslint.org/) and [Prettier](https://prettier.io/) for code linting and formatting.
 
-## Expanding the ESLint configuration
+### Prerequisites
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+*   [Node.js](https://nodejs.org/) (version 18 or later recommended)
+*   [npm](https://www.npmjs.com/) (usually comes with Node.js) or [yarn](https://yarnpkg.com/)
+*   [Git](https://git-scm.com/)
 
-```js
-export default tseslint.config({
-  extends: [
-    // Remove ...tseslint.configs.recommended and replace with this
-    ...tseslint.configs.recommendedTypeChecked,
-    // Alternatively, use this for stricter rules
-    ...tseslint.configs.strictTypeChecked,
-    // Optionally, add this for stylistic rules
-    ...tseslint.configs.stylisticTypeChecked,
-  ],
-  languageOptions: {
-    // other options...
-    parserOptions: {
-      project: ['./tsconfig.node.json', './tsconfig.app.json'],
-      tsconfigRootDir: import.meta.dirname,
-    },
-  },
-})
-```
+### Cloning the Repository
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+1.  Open your terminal or command prompt.
+2.  Navigate to the directory where you want to clone the project.
+3.  Run the following command:
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+    ```bash
+    git clone <repository-url>
+    ```
 
-export default tseslint.config({
-  plugins: {
-    // Add the react-x and react-dom plugins
-    'react-x': reactX,
-    'react-dom': reactDom,
-  },
-  rules: {
-    // other rules...
-    // Enable its recommended typescript rules
-    ...reactX.configs['recommended-typescript'].rules,
-    ...reactDom.configs.recommended.rules,
-  },
-})
-```
+    Replace `<repository-url>` with the actual URL of this repository.
+
+4.  Change into the newly created project directory:
+
+    ```bash
+    cd SEO-AI-frontend
+    ```
+
+### Installation
+
+1.  Install the project dependencies using npm:
+
+    ```bash
+    npm install
+    ```
+
+    Alternatively, if you prefer using yarn:
+
+    ```bash
+    yarn install
+    ```
+
+### Running the Development Server
+
+1.  Start the Vite development server:
+
+    ```bash
+    npm run dev
+    ```
+
+    Or with yarn:
+
+    ```bash
+    yarn dev
+    ```
+
+2.  Open your web browser and navigate to the URL provided in the terminal (usually `http://localhost:5173`).
+
+### Building for Production
+
+1.  To create a production build, run:
+
+    ```bash
+    npm run build
+    ```
+
+    Or with yarn:
+
+    ```bash
+    yarn build
+    ```
+
+    The optimized production files will be located in the `dist` directory.
+
+### Linting and Formatting
+
+*   To run ESLint to check for code style issues:
+
+    ```bash
+    npm run lint
+    ```
+
+    Or with yarn:
+
+    ```bash
+    yarn lint
+    ```
+
+*   Prettier is configured to run automatically on save if you have the Prettier extension installed in your code editor. You can also run it manually if needed.
+
+## Available Scripts
+
+In the project directory, you can run:
+
+*   `npm run dev`: Runs the app in development mode.
+*   `npm run build`: Builds the app for production to the `dist` folder.
+*   `npm run lint`: Lints the codebase using ESLint.
+*   `npm run preview`: Serves the production build locally for previewing.
