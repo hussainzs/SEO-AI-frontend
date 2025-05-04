@@ -24,15 +24,15 @@ const UserInput: FC<UserInputProps> = ({ onAnalyze }) => {
       <form onSubmit={handleSubmit} className="w-full">
         <label
           htmlFor="article-input"
-          className="block text-lg font-medium mb-3 text-text-secondary"
+          className="block font-medium text-2xl mb-5 text-text text-center"
         >
-          Paste your article draft here...
+          Paste your article draft here
         </label>
 
         <textarea
           id="article-input"
           className="input-base h-64"
-          placeholder="Paste your article draft here…"
+          placeholder="Once upon a time, in a land far, far away..."
           value={text}
           onChange={handleChange}
         />

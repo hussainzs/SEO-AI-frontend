@@ -1,6 +1,7 @@
 import { FC, useState } from 'react';
-import { ChevronDown, ChevronUp } from 'lucide-react';
+import { ChevronDown, ChevronUp, Copy, CheckCheck } from 'lucide-react';
 
+// content is sent by the parent component
 export interface UserCardProps {
   content: string;
 }
@@ -8,6 +9,21 @@ export interface UserCardProps {
 const UserCard: FC<UserCardProps> = ({ content }) => {
   // Start with collapsed state as true for automatic collapse
   const [collapsed, setCollapsed] = useState<boolean>(true);
+
+  // state to handle wether user copied the text or not
+  const [copied, setCopied] = useState<boolean>(false);
+
+  // Handle copy function
+  const handleCopy = async () => {
+    try {
+      await navigator.clipboard.writeText(content);
+      setCopied(true);
+      // Reset copied state after 3 seconds
+      setTimeout(() => setCopied(false), 3000);
+    } catch (err) {
+      console.error('Failed to copy text:', err);
+    }
+  };
 
   return (
     <div className="card animate-slide-in overflow-hidden">
@@ -36,7 +52,18 @@ const UserCard: FC<UserCardProps> = ({ content }) => {
       </div>
 
       {!collapsed && (
-        <div className="px-4 py-4 text-text whitespace-pre-wrap mt-2 bg-light-bg rounded-md max-h-96 overflow-y-auto border border-border">
+        <div className="relative px-4 py-4 text-text whitespace-pre-wrap mt-2 bg-light-bg rounded-md max-h-96 overflow-y-auto border border-border">
+          <button
+            onClick={handleCopy}
+            className="absolute top-2 right-2 p-1 text-text hover:bg-primary hover:text-white rounded-md transition-colors"
+            title="Copy to clipboard"
+          >
+            {copied ? (
+              <CheckCheck size={14} className="text-verified" />
+            ) : (
+              <Copy size={14} />
+            )}
+          </button>
           {content}
         </div>
       )}

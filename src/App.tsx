@@ -18,12 +18,14 @@ const App: FC = () => {
   };
 
   return (
-    <div className="flex flex-col min-h-screen bg-background">
+    <div className="flex flex-col min-h-screen">
       <Header />
 
-      <main className="flex-grow container mx-auto px-4 py-8 max-w-4xl">
+      <main className="flex flex-col flex-grow container mx-auto px-4 py-4 max-w-5xl">
         {userInput === null ? (
-          <UserInput onAnalyze={handleAnalyze} />
+          <div className="flex flex-grow items-center">
+            <UserInput onAnalyze={handleAnalyze} />
+          </div>
         ) : (
           <>
             <UserCard content={userInput} />
