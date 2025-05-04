@@ -30,11 +30,11 @@ const App: FC = () => {
           <>
             <UserCard content={userInput} />
             <OutputCard>
-              <p className="text-text-secondary flex items-center gap-2">
-                <span className="animate-pulse">
+              <p className="text-text-secondary">
+                <span className="animate-pulse flex gap-2">
                   <FileSearch />
-                </span>{' '}
-                Analyzing...
+                  Analyzing...
+                </span>
               </p>
             </OutputCard>
           </>
