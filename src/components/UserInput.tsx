@@ -48,9 +48,9 @@ const UserInput: FC<UserInputProps> = ({ onAnalyze, isLoading }) => {
           <button
             type="submit"
             className="btn btn-primary"
-            disabled={!text.trim() || isLoading} // Disable button if no text or during loading
+            disabled={!text.trim() || isLoading} // Disable button if no text or during loading. App.tsx will hide this anyways but this is a good practice.
           >
-            {isLoading ? 'Analyzing...' : 'Analyze Content'}
+            Analyze Content
           </button>
         </div>
       </form>
