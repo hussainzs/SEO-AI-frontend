@@ -3,6 +3,11 @@ import { AgentChatRequest, ChatEvent } from '../types/chatEventTypes';
 
 const API_ENDPOINT = '/api/chat/stream'; // Example endpoint
 
+/**
+ * Interface for the return value of the useChatStream hook.
+ * It includes the messages received from the stream, loading state,
+ * connection state, error message, and a function to start the stream.
+ */
 export interface UseChatStreamReturn {
   messages: ChatEvent[];
   isLoading: boolean;
@@ -112,6 +117,7 @@ export const useChatStream = (): UseChatStreamReturn => {
               if (jsonString) {
                 // Parse the JSON string into a JavaScript object. If parsing fails, we log the error and stop consuming the stream.
                 try {
+                  // Parse the Json as ChatEvent type. Each ChatEvent type has different properties but all have a 'type' property.
                   const eventData = JSON.parse(jsonString) as ChatEvent;
                   setMessages((prevMessages) => [...prevMessages, eventData]);
 
