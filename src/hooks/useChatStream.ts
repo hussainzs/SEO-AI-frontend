@@ -1,7 +1,7 @@
 import { useState, useCallback, useRef, useEffect } from 'react';
 import { AgentChatRequest, ChatEvent } from '../types/chatEventTypes';
 
-const API_ENDPOINT = '/api/chat/stream'; // Example endpoint
+const API_ENDPOINT = 'http://127.0.0.1:8000/api/test-agent/chat/stream';
 
 /**
  * Interface for the return value of the useChatStream hook.

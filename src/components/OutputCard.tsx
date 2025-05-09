@@ -4,7 +4,7 @@ import { ChatEvent } from '../types/chatEventTypes';
 import AnswerCard from './chat/AnswerCard';
 import ToolCallCard from './chat/ToolCallCard';
 import ToolProcessingCard from './chat/ToolProcessingCard';
-import ErrorMessageCard from './chat/ErrorCard';
+import ErrorCard from './chat/ErrorCard';
 import InitialLoading from './chat/InitialLoading';
 
 export interface OutputCardProps {
@@ -21,9 +21,7 @@ const OutputCard: FC<OutputCardProps> = ({
   // 1. Display stream connection errors first
   if (streamError) {
     // Pass a specific title for stream errors, 'content' will be the error message string
-    return (
-      <ErrorMessageCard title="Stream Connection Error" content={streamError} />
-    );
+    return <ErrorCard title="Stream Connection Error" content={streamError} />;
   }
 
   // 2. Show initial loading indicator if connecting and no messages have arrived yet
@@ -59,7 +57,7 @@ const OutputCard: FC<OutputCardProps> = ({
           case 'error': // This is a workflow error from the backend
             // Pass a specific title for workflow errors
             return (
-              <ErrorMessageCard
+              <ErrorCard
                 key={key}
                 title="Workflow Operation Error"
                 content={msg.content}

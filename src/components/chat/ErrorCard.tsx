@@ -16,7 +16,7 @@ interface ErrorCardProps {
 
 const ErrorCard: FC<ErrorCardProps> = ({ title, content }) => {
   return (
-    <div className="card bg-contradicted text-white border-contradicted">
+    <div className="card text-contradicted border-contradicted">
       <div className="mb-2 text-md font-semibold">{title}</div>
       <div className="text-sm whitespace-pre-wrap">{content}</div>
     </div>
