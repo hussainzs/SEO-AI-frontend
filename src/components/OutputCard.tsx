@@ -34,11 +34,18 @@ const OutputCard: FC<OutputCardProps> = ({
     return null;
   }
 
+  // Determine if an 'answer' type message exists in the current list of messages. This reruns everytime `messages` change.
+  // This boolean is passed to ToolProcessingCard to change its appearance once answer has been received.
+  const hasAnswer: boolean = messages.some(
+    (msg: ChatEvent) => msg.type === 'answer'
+  );
+
   // 4. Render the list of messages using their respective components
   return (
     <>
       {messages.map((msg, index) => {
         const key = `chat-msg-${msg.type}-${index}`; // Unique key for each message
+
         // msg is a ChatEvent object which can be multiple interfaces but all have a 'type' property
         // We can use a switch statement to determine the type of message and render accordingly
         switch (msg.type) {
@@ -53,7 +60,13 @@ const OutputCard: FC<OutputCardProps> = ({
               />
             );
           case 'tool_processing':
-            return <ToolProcessingCard key={key} content={msg.content} />;
+            return (
+              <ToolProcessingCard
+                key={key}
+                content={msg.content}
+                isCompleted={hasAnswer}
+              />
+            );
           case 'error': // This is a workflow error from the backend
             // Pass a specific title for workflow errors
             return (
