@@ -1,6 +1,5 @@
 import { FC } from 'react';
-// Import icons for different states: FileSearch for processing, CheckCircle2 for completed.
-import { CheckCircle2, LoaderCircle } from 'lucide-react'; // Added LoaderCircle for a different loading icon
+import { CheckCircle2, LoaderCircle } from 'lucide-react';
 
 interface ToolProcessingCardProps {
   // The main text content to display, typically indicating what tool is processing.
