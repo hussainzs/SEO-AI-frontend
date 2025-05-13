@@ -76,27 +76,42 @@ This project uses [Vite](https://vitejs.dev/), [React](https://react.dev/), [Typ
 
     The optimized production files will be located in the `dist` directory.
 
-### Linting and Formatting
+## Project Structure Overview
 
-*   To run ESLint to check for code style issues:
+- **public/**  
+  Contains static assets such as logos (`logo.png`, `logo.svg`, `logo_transparent.png`) that are served directly.
 
-    ```bash
-    npm run lint
-    ```
+- **src/**  
+  Main application source code.
 
-    Or with yarn:
+  - **assets/**  
+    Reserved for static assets (currently empty).
 
-    ```bash
-    yarn lint
-    ```
+  - **components/**  
+    React components for the UI:
+    - `Header.tsx`: Top navigation/header bar.
+    - `UserInput.tsx`: Text area and submit button for user queries.
+    - `UserCard.tsx`: Collapsible card displaying the user's submitted query; can be expanded to show the full text.
+    - `OutputCard.tsx`: Renders the entire AI output, including all steps and the final result, by mapping over AI response messages.
+    - **chat/**: Specialized UI components for displaying different types of AI responses:
+      - `AnswerCard.tsx`: Shows the AI's answer.
+      - `ToolCallCard.tsx`: Shows when the AI invokes a tool, including tool name and arguments.
+      - `ToolProcessingCard.tsx`: Indicates when a tool is being processed or has completed.
+      - `ErrorCard.tsx`: Displays error messages from the AI or workflow.
+      - `InitialLoading.tsx`: Loading spinner shown while waiting for the first AI response.
 
-*   Prettier is configured to run automatically on save if you have the Prettier extension installed in your code editor. You can also run it manually if needed.
+  - **hooks/**  
+    Custom React hooks:
+    - `useChatStream.ts`: Manages the Server-Sent Events (SSE) connection to the backend, handles streaming AI responses, and manages related state.
 
-## Available Scripts
+  - **types/**  
+    TypeScript type definitions:
+    - `chatEventTypes.ts`: Defines the structure of messages exchanged with the AI backend.
 
-In the project directory, you can run:
+  - `App.tsx`: Main application component; orchestrates user input, displays the user's query, and renders AI output.
+  - `main.tsx`: Entry point for React; renders the React app.
+  - `index.css`: Tailwind CSS and custom styles following tailwind v4 styles.
+  - `vite-env.d.ts`: Vite-specific TypeScript declarations.
 
-*   `npm run dev`: Runs the app in development mode.
-*   `npm run build`: Builds the app for production to the `dist` folder.
-*   `npm run lint`: Lints the codebase using ESLint.
-*   `npm run preview`: Serves the production build locally for previewing.
+- **Configuration Files**  
+  - `package.json`, `tsconfig*.json`, `vite.config.ts`, `eslint.config.js`, `.prettierrc.json`: Project configuration for build, linting, formatting, and dependencies.
