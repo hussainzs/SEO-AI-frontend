@@ -88,7 +88,7 @@ export const useChatStream = (): UseChatStreamReturn => {
           // Read the next chunk from the stream
           const { done, value } = await reader.read();
 
-          // if reader.read() returns done: true, it means the stream is closed
+          // if reader.read() returns done = true, it means the stream is closed
           // if signal.aborted is true, it means the stream was aborted
           if (done || signal.aborted) {
             break;
