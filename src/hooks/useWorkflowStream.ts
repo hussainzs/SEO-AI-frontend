@@ -213,6 +213,7 @@ export const useWorkflowStream = (): UseWorkflowStreamResponse => {
             receivedAt: new Date(),
           };
 
+          // Append new answer to the existing answers state
           setAnswers((prevAnswers: StoredAnswer[]) => [
             ...prevAnswers,
             newAnswer,
@@ -241,7 +242,7 @@ export const useWorkflowStream = (): UseWorkflowStreamResponse => {
         case 'error': {
           const errorEvent = event as WorkflowErrorEvent;
 
-          setStreamError(`Workflow error: ${errorEvent.content}`);
+          setStreamError(`${errorEvent.content}`);
 
           // Stop loading current step but don't mark as completed
           setSteps((prevSteps: WorkflowStepState[]) =>
@@ -286,6 +287,7 @@ export const useWorkflowStream = (): UseWorkflowStreamResponse => {
       // Create abort controller for cancellation support
       abortControllerRef.current = new AbortController();
 
+      // this is what the server expects
       const requestPayload = { user_article: userArticle };
       const streamUrl = `${STREAM_CONFIG.baseUrl}${STREAM_CONFIG.endpoint}`;
 
@@ -321,9 +323,7 @@ export const useWorkflowStream = (): UseWorkflowStreamResponse => {
                 eventMessage.data,
                 parseError
               );
-              setStreamError(
-                'Error parsing server response. Check console for details.'
-              );
+              setStreamError('Error parsing server response.');
             }
           },
 
@@ -353,7 +353,7 @@ export const useWorkflowStream = (): UseWorkflowStreamResponse => {
            * Handles connection errors including network failures and retries.
            * Distinguishes between user-initiated cancellation and actual errors.
            */
-          onerror: (error: any): void => {
+          onerror: (error: unknown): void => {
             setIsStreaming(false);
             currentActiveStepIdRef.current = null;
 
@@ -361,11 +361,10 @@ export const useWorkflowStream = (): UseWorkflowStreamResponse => {
               console.log('Stream connection intentionally cancelled.');
               setStreamError(null);
             } else {
-              const errorMessage =
-                error?.message ||
-                'Connection to server lost. Please try again.';
               console.error('SSE connection error:', error);
-              setStreamError(errorMessage);
+              setStreamError(
+                'Connection error occurred during workflow stream.'
+              );
             }
           },
 

@@ -76,7 +76,7 @@ export interface WorkflowStepState {
   id: string; // A unique identifier for the step (e.g., nodeName + timestamp or index)
   nodeName: string; // Title of the step, from InternalEvent.node
   content: string; // Main content, from InternalEvent.content, updated on "old" status
-  internalContent: string[]; // Additional content items, from InternalContentEvent.content
+  internalContent: string[]; // Additional content items like entities extracted or search queries, from InternalContentEvent.content
   isCurrent: boolean; // True if this is the active step being processed or expecting updates
   isCompleted: boolean; // True if this step has finished processing (either succeeded or a new step started)
   showDetails: boolean; // Controls individual card expansion state, especially after global collapse
