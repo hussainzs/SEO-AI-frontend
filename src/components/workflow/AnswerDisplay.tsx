@@ -22,9 +22,10 @@ interface AnswerDisplayProps {
  */
 const AnswerDisplay: FC<AnswerDisplayProps> = ({ answers, isCompleted }) => {
   /**
-   * Don't render anything if there are no answers yet.
+   * Don't render anything if there are no answers yet or workflow hasn't completed.
+   * Answers should only be displayed once the entire workflow is done.
    */
-  if (answers.length === 0) {
+  if (answers.length === 0 || !isCompleted) {
     return null;
   }
 
@@ -34,7 +35,10 @@ const AnswerDisplay: FC<AnswerDisplayProps> = ({ answers, isCompleted }) => {
    */
   const formatAnswerData = (data: Record<string, unknown>): string => {
     try {
-      return JSON.stringify(data, null, 2);
+      // Return data as plain text
+      return Object.entries(data)
+        .map(([key, value]) => `${key}: ${JSON.stringify(value)}`)
+        .join('\\n');
     } catch (error) {
       console.error('Error formatting answer data:', error);
       return 'Error formatting answer data';
@@ -67,13 +71,6 @@ const AnswerDisplay: FC<AnswerDisplayProps> = ({ answers, isCompleted }) => {
               </p>
             </div>
           </div>
-
-          {/* Answer index indicator */}
-          <div className="bg-primary-light px-2 py-1 rounded-full">
-            <span className="text-xs font-medium text-primary">
-              #{index + 1}
-            </span>
-          </div>
         </div>
 
         {/* Answer content */}
@@ -93,30 +90,8 @@ const AnswerDisplay: FC<AnswerDisplayProps> = ({ answers, isCompleted }) => {
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-3">
           <h2 className="text-xl font-semibold text-text">Workflow Results</h2>
-
-          {/* Completion status badge */}
-          {isCompleted && (
-            <div className="flex items-center gap-2 px-3 py-1 bg-verified rounded-full">
-              <div className="w-2 h-2 bg-verified rounded-full"></div>
-              <span className="text-sm text-verified font-medium">
-                Complete
-              </span>
-            </div>
-          )}
-        </div>
-
-        {/* Answer counter */}
-        <div className="text-sm text-text-secondary">
-          {answers.length} answer{answers.length !== 1 ? 's' : ''} collected
         </div>
       </div>
-
-      {/* Description */}
-      <p className="text-text-secondary mb-6">
-        {isCompleted
-          ? 'Here are the final results from your workflow analysis:'
-          : 'Answers are being collected as the workflow progresses:'}
-      </p>
 
       {/* Answers container */}
       <div className="space-y-4">

@@ -17,8 +17,8 @@
   --color-contradicted-bg: rgba(185, 28, 28, 0.1);
   --color-additional: #1d4ed8;
   --color-additional-bg: rgba(29, 78, 216, 0.1);
-  /* Custom Keyframes Definitions */
-  /* Keyframes are defined directly within @theme in v4 */  @keyframes fadeIn {
+
+  @keyframes fadeIn {
     from {
       opacity: 0;
     }
@@ -44,16 +44,6 @@
       opacity: 0.5;
     }
   }
-  @keyframes slideInLeft {
-    from {
-      transform: translateX(-20px);
-      opacity: 0;
-    }
-    to {
-      transform: translateX(0);
-      opacity: 1;
-    }
-  }
   @keyframes contentTransition {
     0% {
       opacity: 0;
@@ -72,14 +62,6 @@
       transform: rotate(360deg);
     }
   }
-  @keyframes pulse {
-    0%, 100% {
-      opacity: 1;
-    }
-    50% {
-      opacity: 0.5;
-    }
-  }
   @keyframes slideInLeft {
     from {
       transform: translateX(-20px);
@@ -88,24 +70,6 @@
     to {
       transform: translateX(0);
       opacity: 1;
-    }
-  }
-  @keyframes contentTransition {
-    0% {
-      opacity: 0;
-      transform: translateY(10px);
-    }
-    100% {
-      opacity: 1;
-      transform: translateY(0);
-    }
-  }
-  @keyframes spin {
-    from {
-      transform: rotate(0deg);
-    }
-    to {
-      transform: rotate(360deg);
     }
   }
 }
@@ -148,7 +112,6 @@ body {
 .bg-additional {
   background-color: var(--color-additional-bg);
 }
-
 .border-verified {
   border-color: var(--color-verified);
 }
@@ -231,32 +194,6 @@ body {
 .workflow-show-more-btn:hover {
   color: var(--color-text);
 }
-.border-contradicted {
-  border-color: var(--color-contradicted);
-}
-/* ──────── Shadows ───────────────────────────────────────────────────────── */
-.shadow-header {
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-}
-/* Apply animations using standard CSS classes referencing the keyframes */
-.animate-fade-in {
-  animation: fadeIn 0.5s ease-in-out;
-}
-.animate-slide-in {
-  animation: slideIn 0.3s ease-out forwards;
-}
-.animate-pulse {
-  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
-}
-.animate-slide-in-left {
-  animation: slideInLeft 0.3s ease-out forwards;
-}
-.animate-content-transition {
-  animation: contentTransition 0.4s ease-out forwards;
-}
-.animate-spin {
-  animation: spin 1s linear infinite;
-}
 /* ──────── Buttons ───────────────────────────────────────────────────────── */
 .btn {
   @apply font-medium rounded-md cursor-pointer transition-all duration-200 ease-in-out;
@@ -280,44 +217,12 @@ body {
 .card {
   @apply bg-white p-6 rounded-md shadow-md my-4 w-full;
 }
-/* ──────── Workflow specific styling ──────────────────────────────────────── */
-.workflow-step-card {
-  @apply bg-white rounded-lg shadow-md my-3 overflow-hidden transition-all duration-300 ease-in-out;
-}
-.workflow-step-card.collapsed {
-  @apply py-3 px-4;
-}
-.workflow-step-card.expanded {
-  @apply p-6;
-}
-.workflow-pin-container {
-  @apply flex items-center justify-center w-8 h-8 rounded-full relative;
-}
-.workflow-pin-current {
-  @apply bg-primary;
-}
-.workflow-pin-completed {
-  @apply bg-verified;
-}
-.workflow-pin-pending {
-  @apply bg-gray-300;
-}
-.workflow-content-current {
-  @apply animate-pulse;
-}
-.workflow-internal-item {
-  @apply bg-background rounded-md p-3 mb-2 border border-border text-sm;
-}
-.workflow-show-more-btn {
-  @apply text-xs text-text-secondary hover:text-text cursor-pointer transition-colors duration-200;
-}
 /* ──────── "User" Tag ────────────────────────────────────────────────────── */
 .tag-user {
   @apply inline-flex items-center justify-center
          bg-verified text-white rounded-full
          w-10 h-10 font-semibold;
 }
-
 .tag-ai {
   @apply inline-flex items-center justify-center
          bg-primary text-white rounded-full

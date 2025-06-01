@@ -58,7 +58,7 @@ const WorkflowDisplay: FC<WorkflowDisplayProps> = ({
       <div className="py-8">
         <LoadingSpinner
           size={40}
-          message="Connecting to workflow..."
+          message="Starting workflow..."
           className="justify-center"
         />
       </div>
@@ -74,7 +74,7 @@ const WorkflowDisplay: FC<WorkflowDisplayProps> = ({
 
   return (
     <div className="workflow-display">
-      {/* Workflow header with status indicator */}
+      {/* Workflow header with status indicator and ShowMoreButton for completed steps */}
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-3">
           <h2 className="text-xl font-semibold text-text">Workflow Progress</h2>
@@ -101,43 +101,40 @@ const WorkflowDisplay: FC<WorkflowDisplayProps> = ({
           </div>
         </div>
 
-        {/* Step counter */}
-        <div className="text-sm text-text-secondary">
-          {workflowSteps.length} step{workflowSteps.length !== 1 ? 's' : ''}
-        </div>
+        {/* ShowMoreButton replaces the step counter and toggles completed steps visibility */}
+        {isCompleted && (
+          <ShowMoreButton
+            isExpanded={showCompletedSteps}
+            onClick={() => setShowCompletedSteps(!showCompletedSteps)}
+            expandedText="Show More"
+            collapsedText="Hide Steps"
+            className="text-2xl text-text-primary"
+          />
+        )}
+        {/* When not completed, show the step counter as before */}
+        {!isCompleted && (
+          <div className="text-sm text-text-secondary">
+            {workflowSteps.length} step{workflowSteps.length !== 1 ? 's' : ''}
+          </div>
+        )}
       </div>
 
       {/* Workflow steps container */}
       <div className="space-y-3">
+        {/* When completed, show steps only if showCompletedSteps is true */}
         {isCompleted ? (
-          // Completed state with collapsible steps
-          <div className="bg-white rounded-lg shadow-md overflow-hidden transition-all duration-300 ease-in-out">
-            <div className="p-4 border-b border-border">
-              <div className="flex justify-between items-center">
-                <h3 className="text-lg font-semibold text-text">
-                  Completed Workflow Steps
-                </h3>
-                <ShowMoreButton
-                  isExpanded={showCompletedSteps}
-                  onClick={() => setShowCompletedSteps(!showCompletedSteps)}
-                  expandedText="Show Steps"
-                  collapsedText="Hide Steps"
+          showCompletedSteps && (
+            <>
+              {/* Render all workflow steps as cards */}
+              {workflowSteps.map((step: WorkflowStepState) => (
+                <WorkflowStepCard
+                  key={step.id}
+                  step={step}
+                  onToggleExpansion={onToggleStepExpansion}
                 />
-              </div>
-            </div>
-
-            {showCompletedSteps && (
-              <div className="p-4">
-                {workflowSteps.map((step: WorkflowStepState) => (
-                  <WorkflowStepCard
-                    key={step.id}
-                    step={step}
-                    onToggleExpansion={onToggleStepExpansion}
-                  />
-                ))}
-              </div>
-            )}
-          </div>
+              ))}
+            </>
+          )
         ) : (
           // Active workflow - show all steps
           <>
@@ -160,22 +157,6 @@ const WorkflowDisplay: FC<WorkflowDisplayProps> = ({
             message="Processing next steps..."
             className="justify-center"
           />
-        </div>
-      )}
-
-      {/* Completion message */}
-      {isCompleted && (
-        <div className="mt-6 p-4 bg-verified rounded-md border border-verified">
-          <div className="flex items-center gap-2 text-verified">
-            <div className="w-4 h-4 bg-verified rounded-full"></div>
-            <span className="font-medium">
-              Workflow completed successfully!
-            </span>
-          </div>
-          <p className="text-sm text-text-secondary mt-1">
-            All processing steps have finished. Check the answers below for
-            results.
-          </p>
         </div>
       )}
     </div>
