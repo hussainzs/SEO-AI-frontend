@@ -1,3 +1,5 @@
+// This is the old hook that we used to handle the simplier SSE stream earlier.
+
 import { useState, useCallback, useRef, useEffect } from 'react';
 import { AgentChatRequest, ChatEvent } from '../types/chatEventTypes';
 

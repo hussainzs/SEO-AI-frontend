@@ -1,436 +1,465 @@
 import { useState, useCallback, useRef, useEffect } from 'react';
 import {
-  fetchEventSource,
-  EventSourceMessage,
-} from '@microsoft/fetch-event-source';
-import {
   WorkflowEvent,
   WorkflowStepState,
   StoredAnswer,
-  InternalEvent,
-  InternalContentEvent,
-  AnswerEvent,
-  ErrorEvent as WorkflowErrorEvent,
 } from '../types/workflowEvents';
 
+// API endpoint for the keyword agent stream
+// const API_ENDPOINT = 'http://127.0.0.1:8000/agent/keyword/stream';
+const API_ENDPOINT = 'http://127.0.0.1:8000/api/test/keyword/stream'; // testing endpoint
+
 /**
- * Configuration interface for the workflow stream API endpoint.
+ * Request interface matching the backend's expected structure
  */
-interface StreamConfig {
-  baseUrl: string;
-  endpoint: string;
+interface KeywordAgentRequest {
+  user_article: string;
 }
 
 /**
- * Response interface for the useWorkflowStream hook.
- * Provides all necessary state and control methods for managing workflow streams.
+ * Return interface for the useWorkflowStream hook providing all necessary state and controls
  */
-export interface UseWorkflowStreamResponse {
-  steps: WorkflowStepState[];
+export interface UseWorkflowStreamReturn {
+  /** Array of workflow step states representing each processing step */
+  workflowSteps: WorkflowStepState[];
+  /** Array of collected answers from the workflow, displayed after completion */
   answers: StoredAnswer[];
-  streamError: string | null;
+  /** True when stream is active and processing */
   isStreaming: boolean;
-  isWorkflowComplete: boolean;
-  // this is async function and returns a Promise to ensure consumers of the hook know they must await
-  startWorkflow: (userArticle: string) => Promise<void>;
-  cancelWorkflow: () => void;
-  resetWorkflow: () => void;
+  /** True when initially connecting but no data received yet */
+  isConnecting: boolean;
+  /** True when workflow has completed successfully */
+  isCompleted: boolean;
+  /** Error message from stream connection or processing */
+  error: string | null;
+  /** Function to initiate the workflow stream */
+  startWorkflowStream: (userArticle: string) => Promise<void>;
+  /** Function to manually stop the current stream */
+  stopStream: () => void;
+  /** Function to toggle expansion of a specific workflow step card */
+  toggleStepExpansion: (stepId: string) => void;
 }
 
-// Configuration for the API endpoint with environment variable support
-const STREAM_CONFIG: StreamConfig = {
-  baseUrl: 'http://127.0.0.1:8000',
-  // endpoint: '/agent/keyword/stream',
-  endpoint: '/agent/test/keyword/stream', // testing endpoint
-};
-
-// Counter for generating unique step IDs to ensure stable React keys
-let stepIdCounter = 0;
-
 /**
- * Generates a unique identifier for workflow steps.
- * Combines node name, counter, and timestamp for uniqueness.
- * @param {string} nodeName - The name of the workflow node
- * @returns {string} A unique identifier for the step
+ * Custom hook for managing workflow SSE streams with comprehensive state management.
+ * Handles connection, reconnection, parsing, and state updates for workflow events.
+ *
+ * @returns {UseWorkflowStreamReturn} Hook state and control functions
  */
-const generateStepId = (nodeName: string): string => {
-  stepIdCounter += 1;
-  const sanitizedName = nodeName.replace(/\s+/g, '-').toLowerCase();
-  return `${sanitizedName}-${stepIdCounter}-${Date.now()}`;
-};
-
-/**
- * Custom hook for managing Server-Sent Events (SSE) workflow streams.
- * Handles connection, data processing, error management, and state updates.
- * Features:
- * - Automatic reconnection via @microsoft/fetch-event-source
- * - Error handling for network and parsing errors
- * - Manages the workflow steps and tracks completion and loading states for them
- * - Collects answers from the workflow and stores them in a separate state
- * - Clean cancellation of connection and cleanup mechanisms
- * @returns {UseWorkflowStreamResponse} Hook response with state and control methods
- */
-export const useWorkflowStream = (): UseWorkflowStreamResponse => {
-  // State for workflow steps displayed as cards in the UI
-  const [steps, setSteps] = useState<WorkflowStepState[]>([]);
-
-  // State for collecting data of type "answer" from the workflow. These are shown after all the steps are completed but we may receive them at any time
+export const useWorkflowStream = (): UseWorkflowStreamReturn => {
+  // Core stream state management
+  const [workflowSteps, setWorkflowSteps] = useState<WorkflowStepState[]>([]);
   const [answers, setAnswers] = useState<StoredAnswer[]>([]);
-
-  // State for tracking stream connection and parsing errors
-  const [streamError, setStreamError] = useState<string | null>(null);
-
-  // State indicating whether the stream connection is active
   const [isStreaming, setIsStreaming] = useState<boolean>(false);
+  const [isConnecting, setIsConnecting] = useState<boolean>(false);
+  const [isCompleted, setIsCompleted] = useState<boolean>(false);
+  const [error, setError] = useState<string | null>(null);
 
-  // State indicating whether the workflow has completed successfully. Once this is true, answers are shown and step cards are collapsed
-  const [isWorkflowComplete, setIsWorkflowComplete] = useState<boolean>(false);
-
-  // Ref for managing stream cancellation via AbortController. We use Ref to persist this across renders
+  // Stream control references
   const abortControllerRef = useRef<AbortController | null>(null);
+  const reconnectTimeoutRef = useRef<number | null>(null);
+  const reconnectAttemptsRef = useRef<number>(0);
 
-  // Ref for tracking the currently active step that receives updates. This helps us update the correct card in the UI
-  const currentActiveStepIdRef = useRef<string | null>(null);
-
-  /**
-   * Public method. Resets all hook state to initial values.
-   * Called before starting a new workflow (indicated by empty dependency array) or on explicit reset.
-   */
-  const resetAllStates = useCallback((): void => {
-    setSteps([]);
-    setAnswers([]);
-    setStreamError(null);
-    setIsStreaming(false);
-    setIsWorkflowComplete(false);
-    currentActiveStepIdRef.current = null;
-    stepIdCounter = 0;
-  }, []);
+  // Configuration constants
+  const MAX_RECONNECT_ATTEMPTS = 3;
+  const RECONNECT_DELAY = 5000; // 5 seconds
 
   /**
-   * Public method. Cancels the current workflow stream if one is active.
-   * Aborts the fetch request and triggers cleanup callbacks.
-   */
-  const cancelWorkflow = useCallback((): void => {
-    if (abortControllerRef.current) {
-      abortControllerRef.current.abort();
-      console.log('Workflow streaming explicitly cancelled by user.');
-    }
-  }, []);
-
-  /**
-   * Public method. Resets workflow state.
-   * Useful for clearing UI before starting a new workflow.
-   */
-  const resetWorkflow = useCallback((): void => {
-    cancelWorkflow();
-    resetAllStates();
-  }, [cancelWorkflow, resetAllStates]);
-
-  /**
-   * Processes incoming workflow events and updates component state accordingly.
-   * Handles different event types with appropriate state transformations.
+   * Generates a unique identifier for workflow steps using node name and timestamp.
+   * Ensures uniqueness for each step.
    *
-   * @param {WorkflowEvent} event - The parsed event from the SSE stream
+   * @param nodeName - The name of the workflow node
+   * @returns Unique string identifier
    */
-  const processWorkflowEvent = useCallback((event: WorkflowEvent): void => {
-    try {
+  const generateStepId = useCallback((nodeName: string): string => {
+    // Use node name and current timestamp for uniqueness
+    return `${nodeName}-${Date.now()}`;
+  }, []);
+
+  /**
+   * Creates a new workflow step state object with default values.
+   * Called when receiving an "internal" event with "new" status.
+   *
+   * @param nodeName - Name of the workflow node
+   * @param content - Initial content for the step
+   * @returns New WorkflowStepState object
+   */
+  const createNewStep = useCallback(
+    (nodeName: string, content: string): WorkflowStepState => {
+      return {
+        id: generateStepId(nodeName),
+        nodeName,
+        content,
+        internalContent: [],
+        isCurrent: true, // set this to true as this is the latest step
+        isCompleted: false,
+        showDetails: true, // Start expanded, will collapse after completion
+        isLoading: true,
+      };
+    },
+    [generateStepId]
+  );
+
+  /**
+   * Processes workflow events and updates state accordingly.
+   * Handles all event types: internal, internal_content, answer, error, complete.
+   *
+   * @param event - The parsed workflow event from the stream
+   */
+  const processWorkflowEvent = useCallback(
+    (event: WorkflowEvent): void => {
       switch (event.type) {
         case 'internal': {
-          const internalEvent = event as InternalEvent;
-
-          setSteps((prevSteps: WorkflowStepState[]) => {
-            if (internalEvent.event_status === 'new') {
-              // Mark previous step as completed when starting a new step
-              const updatedSteps = prevSteps.map((step: WorkflowStepState) =>
-                // find the current active step and mark it as completed
-                step.id === currentActiveStepIdRef.current
-                  ? {
-                      ...step,
-                      isCurrent: false,
-                      isCompleted: true,
-                      isLoading: false,
-                    }
-                  : step
-              );
-
-              // Create new workflow step
-              const newStep: WorkflowStepState = {
-                id: generateStepId(internalEvent.node),
-                nodeName: internalEvent.node,
-                content: internalEvent.content,
-                internalContent: [],
-                isCurrent: true,
-                isCompleted: false,
-                showDetails: true,
-                isLoading: true,
-              };
-
-              // Update current step reference
-              currentActiveStepIdRef.current = newStep.id;
-
+          if (event.event_status === 'new') {
+            // Go through all previous steps and update their state and add new step
+            setWorkflowSteps((prevSteps: WorkflowStepState[]) => {
+              // Mark all previous steps as completed and not current
+              const updatedSteps = prevSteps.map((step) => {
+                return {
+                  ...step,
+                  isCurrent: false,
+                  isCompleted: true,
+                  isLoading: false,
+                };
+              });
+              // Add the new step as the current one
+              const newStep = createNewStep(event.node, event.content);
               return [...updatedSteps, newStep];
-            } else {
-              // Update existing step content (event_status === 'old')
-              return prevSteps.map((step: WorkflowStepState) =>
-                step.id === currentActiveStepIdRef.current
-                  ? {
-                      ...step,
-                      content: internalEvent.content,
-                      isLoading: true,
-                    }
-                  : step
+            });
+          } else if (event.event_status === 'old') {
+            // Update the content of the current (active) step only
+            setWorkflowSteps((prevSteps: WorkflowStepState[]) => {
+              return prevSteps.map((step) =>
+                step.isCurrent ? { ...step, content: event.content } : step
               );
-            }
-          });
+            });
+          }
           break;
         }
 
         case 'internal_content': {
-          const contentEvent = event as InternalContentEvent;
-
-          setSteps((prevSteps: WorkflowStepState[]) =>
-            prevSteps.map((step: WorkflowStepState) =>
-              step.id === currentActiveStepIdRef.current
+          // Append new content to the internalContent array of the current step
+          setWorkflowSteps((prevSteps: WorkflowStepState[]) => {
+            return prevSteps.map((step) =>
+              step.isCurrent
                 ? {
                     ...step,
-                    internalContent: [
-                      ...step.internalContent,
-                      ...contentEvent.content,
-                    ],
+                    internalContent: step.internalContent.concat(event.content),
                   }
                 : step
-            )
-          );
+            );
+          });
           break;
         }
 
         case 'answer': {
-          const answerEvent = event as AnswerEvent;
-
-          const newAnswer: StoredAnswer = {
-            node: answerEvent.node,
-            data: answerEvent.content,
-            receivedAt: new Date(),
-          };
-
-          // Append new answer to the existing answers state
-          setAnswers((prevAnswers: StoredAnswer[]) => [
-            ...prevAnswers,
-            newAnswer,
-          ]);
-          break;
-        }
-
-        case 'complete': {
-          // Mark all steps as completed and finalize workflow
-          setSteps((prevSteps: WorkflowStepState[]) =>
-            prevSteps.map((step: WorkflowStepState) => ({
-              ...step,
-              isCurrent: false,
-              isCompleted: true,
-              isLoading: false,
-              showDetails: false, // Collapse all steps on completion
-            }))
-          );
-
-          setIsWorkflowComplete(true);
-          setIsStreaming(false);
-          currentActiveStepIdRef.current = null;
+          // Add the answer to the answers array
+          setAnswers((prevAnswers: StoredAnswer[]) => {
+            const newAnswer: StoredAnswer = {
+              node: event.node,
+              data: event.content,
+              receivedAt: new Date(),
+            };
+            return [...prevAnswers, newAnswer];
+          });
           break;
         }
 
         case 'error': {
-          const errorEvent = event as WorkflowErrorEvent;
-
-          setStreamError(`${errorEvent.content}`);
-
-          // Stop loading current step but don't mark as completed
-          setSteps((prevSteps: WorkflowStepState[]) =>
-            prevSteps.map((step: WorkflowStepState) =>
-              step.id === currentActiveStepIdRef.current
-                ? { ...step, isLoading: false, isCurrent: false }
-                : step
-            )
-          );
+          // Set error state and stop streaming
+          setError(event.content);
+          setIsStreaming(false);
+          setIsConnecting(false);
           break;
         }
 
-        default:
+        case 'complete': {
+          // Mark all steps as completed and collapsed
+          setWorkflowSteps((prevSteps: WorkflowStepState[]) => {
+            return prevSteps.map((step) => ({
+              ...step,
+              isCurrent: false,
+              isCompleted: true,
+              isLoading: false,
+              showDetails: false, // set this to false for all to collapse step cards after completion
+            }));
+          });
+          setIsCompleted(true);
+          setIsStreaming(false);
+          setIsConnecting(false);
+          break;
+        }
+
+        default: {
           console.warn('Unknown workflow event type received:', event);
+          break;
+        }
       }
-    } catch (error) {
-      console.error('Error processing workflow event:', error);
-      setStreamError('Failed to process workflow event.');
-    }
-  }, []);
+    },
+    [createNewStep]
+  );
 
   /**
-   * Initiates the SSE workflow stream with the provided user article.
-   * Manages connection lifecycle, error handling, and event processing.
+   * Handles the SSE stream reading with proper buffer management and event parsing.
+   * Processes multiple events that may arrive in a single chunk and handles partial messages.
    *
-   * @param {string} userArticle - The user's article content to process
+   * @param response - The fetch response containing the SSE stream
+   * @param signal - AbortSignal for cancelling the stream
    */
-  const startWorkflow = useCallback(
-    async (userArticle: string): Promise<void> => {
-      // Prevent multiple concurrent streams
-      if (isStreaming) {
-        console.warn(
-          'Workflow already in progress. Cancel current stream first.'
+  const processStreamResponse = useCallback(
+    async (response: Response, signal: AbortSignal): Promise<void> => {
+      if (!response.body) {
+        throw new Error('Response body is null, cannot read stream.');
+      }
+
+      const reader: ReadableStreamDefaultReader<Uint8Array> =
+        response.body.getReader();
+      const decoder = new TextDecoder('utf-8');
+      let buffer = '';
+
+      try {
+        while (true) {
+          const { done, value } = await reader.read();
+
+          // Check for stream completion or cancellation
+          if (done || signal.aborted) {
+            break;
+          }
+
+          // Mark as connected after receiving first chunk
+          if (isConnecting) {
+            setIsConnecting(false);
+            reconnectAttemptsRef.current = 0; // Reset reconnect attempts on successful connection
+          }
+
+          // Decode chunk and add to buffer for processing
+          buffer += decoder.decode(value, { stream: true });
+
+          // Process all complete SSE messages in the current buffer
+          let messageEndIndex: number;
+          while ((messageEndIndex = buffer.indexOf('\n\n')) >= 0) {
+            const messageLine: string = buffer
+              .substring(0, messageEndIndex)
+              .trim();
+            buffer = buffer.substring(messageEndIndex + 2);
+
+            // Parse SSE data events (format: "data: {json}")
+            if (messageLine.startsWith('data:')) {
+              const jsonString: string = messageLine.substring(5).trim();
+
+              if (jsonString) {
+                try {
+                  const eventData: WorkflowEvent = JSON.parse(jsonString);
+                  // call the event processing function
+                  processWorkflowEvent(eventData);
+
+                  // Stop processing if workflow completed
+                  if (eventData.type === 'complete') {
+                    await reader.cancel();
+                    return;
+                  }
+                } catch (parseError) {
+                  console.error(
+                    'Failed to parse workflow event JSON:',
+                    jsonString,
+                    parseError
+                  );
+                  // Continue processing other events rather than failing completely
+                }
+              }
+            }
+          }
+        }
+      } finally {
+        reader.releaseLock();
+      }
+    },
+    [isConnecting, processWorkflowEvent]
+  );
+
+  /**
+   * Attempts to reconnect to the stream after a connection failure.
+   * Uses exponential backoff and limits the number of reconnection attempts.
+   *
+   * @param userArticle - The original user input to retry with
+   * @param startWorkflowStreamFn - Reference to the startWorkflowStream function to avoid circular dependency
+   */
+  const attemptReconnection = useCallback(
+    (
+      userArticle: string,
+      startWorkflowStreamFn: (userArticle: string) => Promise<void>
+    ): void => {
+      if (reconnectAttemptsRef.current >= MAX_RECONNECT_ATTEMPTS) {
+        setError(
+          `Failed to connect after ${MAX_RECONNECT_ATTEMPTS} attempts. Please try again.`
         );
+        setIsStreaming(false);
+        setIsConnecting(false);
         return;
       }
 
-      // Reset state for fresh workflow
-      resetAllStates();
+      reconnectAttemptsRef.current += 1;
+      const delay: number =
+        RECONNECT_DELAY * Math.pow(2, reconnectAttemptsRef.current - 1);
+
+      console.log(
+        `Attempting reconnection ${reconnectAttemptsRef.current}/${MAX_RECONNECT_ATTEMPTS} in ${delay}ms`
+      );
+
+      reconnectTimeoutRef.current = window.setTimeout(() => {
+        startWorkflowStreamFn(userArticle);
+      }, delay);
+    },
+    [MAX_RECONNECT_ATTEMPTS, RECONNECT_DELAY]
+  );
+
+  /**
+   * Initiates the workflow stream with the provided user article.
+   * Handles connection, error recovery, and proper state management.
+   *
+   * @param userArticle - The user's article content to process
+   */
+  const startWorkflowStream = useCallback(
+    async (userArticle: string): Promise<void> => {
+      // Prevent multiple concurrent streams
+      if (isStreaming || abortControllerRef.current) {
+        console.warn('Stream already in progress');
+        return;
+      }
+
+      // Reset state for new stream
+      setWorkflowSteps([]);
+      setAnswers([]);
+      setError(null);
+      setIsCompleted(false);
       setIsStreaming(true);
+      setIsConnecting(true);
 
-      // Create abort controller for cancellation support
+      // Create new abort controller for this stream
       abortControllerRef.current = new AbortController();
-
-      // this is what the server expects
-      const requestPayload = { user_article: userArticle };
-      const streamUrl = `${STREAM_CONFIG.baseUrl}${STREAM_CONFIG.endpoint}`;
+      const { signal } = abortControllerRef.current;
 
       try {
-        await fetchEventSource(streamUrl, {
+        const requestBody: KeywordAgentRequest = { user_article: userArticle };
+
+        const response: Response = await fetch(API_ENDPOINT, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
             Accept: 'text/event-stream',
-            'Cache-Control': 'no-cache',
           },
-          body: JSON.stringify(requestPayload),
-          signal: abortControllerRef.current.signal,
-
-          /**
-           * Handles incoming SSE messages from the server.
-           * Parses JSON data and delegates to event processor.
-           */
-          onmessage: (eventMessage: EventSourceMessage): void => {
-            if (!eventMessage.data) {
-              console.warn('Received SSE message without data:', eventMessage);
-              return;
-            }
-
-            try {
-              const parsedEvent = JSON.parse(
-                eventMessage.data
-              ) as WorkflowEvent;
-              // call the function to proceess the workflow event which will also update the state
-              processWorkflowEvent(parsedEvent);
-            } catch (parseError) {
-              console.error(
-                'Failed to parse SSE event data:',
-                eventMessage.data,
-                parseError
-              );
-              setStreamError('Error parsing server response.');
-            }
-          },
-
-          /**
-           * Handles successful connection opening.
-           * Validates response and sets appropriate state.
-           */
-          onopen: async (response: Response): Promise<void> => {
-            const contentType = response.headers.get('content-type');
-            const isEventStream = contentType?.startsWith('text/event-stream');
-
-            if (response.ok && isEventStream) {
-              setStreamError(null);
-              console.log('SSE connection established successfully.');
-            } else {
-              setIsStreaming(false);
-
-              const errorText = await response.text();
-              const errorMessage = `Connection failed: ${response.status} ${response.statusText}. ${errorText}`;
-
-              setStreamError(errorMessage);
-              throw new Error(errorMessage);
-            }
-          },
-
-          /**
-           * Handles connection errors including network failures and retries.
-           * Distinguishes between user-initiated cancellation and actual errors.
-           */
-          onerror: (error: unknown): void => {
-            setIsStreaming(false);
-            currentActiveStepIdRef.current = null;
-
-            if (error instanceof Error && error.name === 'AbortError') {
-              console.log('Stream connection intentionally cancelled.');
-              setStreamError(null);
-            } else {
-              console.error('SSE connection error:', error);
-              setStreamError(
-                'Connection error occurred during workflow stream.'
-              );
-            }
-          },
-
-          /**
-           * Handles connection closure from server or client.
-           * Detects unexpected closures and sets appropriate error state.
-           */
-          onclose: (): void => {
-            console.log('SSE connection closed.');
-
-            const wasAborted = abortControllerRef.current?.signal.aborted;
-            const hasError = streamError !== null;
-
-            // Set error for unexpected closures
-            if (!isWorkflowComplete && !wasAborted && !hasError) {
-              setStreamError('Connection closed unexpectedly by server.');
-            }
-
-            setIsStreaming(false);
-            abortControllerRef.current = null;
-          },
+          body: JSON.stringify(requestBody),
+          signal,
         });
-      } catch (setupError) {
-        console.error('Failed to initiate workflow stream:', setupError);
 
-        const errorMessage =
-          setupError instanceof Error
-            ? setupError.message
-            : 'Unknown error initiating workflow stream.';
+        if (!response.ok) {
+          let errorMessage = `HTTP ${response.status}: ${response.statusText}`;
+          try {
+            const errorText: string = await response.text();
+            if (errorText) {
+              errorMessage += `\nServer response: ${errorText}`;
+            }
+          } catch {
+            // Ignore errors when reading error response body
+          }
+          throw new Error(errorMessage);
+        }
+        // Start processing the stream response
+        await processStreamResponse(response, signal);
+      } catch (err) {
+        if (err instanceof Error && err.name === 'AbortError') {
+          console.log('Stream was cancelled');
+        } else {
+          console.error('Stream error:', err);
 
-        setStreamError(errorMessage);
-        setIsStreaming(false);
-        resetAllStates();
+          // Attempt reconnection for network errors if not manually cancelled
+          if (
+            !signal.aborted &&
+            reconnectAttemptsRef.current < MAX_RECONNECT_ATTEMPTS
+          ) {
+            attemptReconnection(userArticle, startWorkflowStream);
+            return;
+          }
+
+          setError(
+            err instanceof Error
+              ? err.message
+              : 'An unknown error occurred during streaming'
+          );
+        }
+      } finally {
+        // Only clean up if this wasn't a reconnection attempt
+        if (!reconnectTimeoutRef.current) {
+          setIsStreaming(false);
+          setIsConnecting(false);
+          abortControllerRef.current = null;
+        }
       }
     },
     [
       isStreaming,
-      resetAllStates,
-      processWorkflowEvent,
-      isWorkflowComplete,
-      streamError,
+      processStreamResponse,
+      attemptReconnection,
+      MAX_RECONNECT_ATTEMPTS,
     ]
   );
 
   /**
-   * Cleanup effect to abort active streams when component unmounts.
-   * Prevents memory leaks and orphaned connections.
+   * Manually stops the current stream and cancels any pending reconnection attempts.
+   */
+  const stopStream = useCallback((): void => {
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+      abortControllerRef.current = null;
+    }
+
+    if (reconnectTimeoutRef.current) {
+      window.clearTimeout(reconnectTimeoutRef.current);
+      reconnectTimeoutRef.current = null;
+    }
+
+    reconnectAttemptsRef.current = 0;
+    setIsStreaming(false);
+    setIsConnecting(false);
+  }, []);
+
+  /**
+   * Toggles the expansion state of a specific workflow step card.
+   * Used to show/hide detailed content after workflow completion.
+   *
+   * @param stepId - Unique identifier of the step to toggle
+   */
+  const toggleStepExpansion = useCallback((stepId: string): void => {
+    setWorkflowSteps((prevSteps: WorkflowStepState[]) =>
+      prevSteps.map((step: WorkflowStepState) =>
+        step.id === stepId ? { ...step, showDetails: !step.showDetails } : step
+      )
+    );
+  }, []);
+
+  /**
+   * Cleanup effect to abort streams and clear timeouts on component unmount.
    */
   useEffect(() => {
-    return (): void => {
+    return () => {
       if (abortControllerRef.current) {
-        console.log('useWorkflowStream cleanup: Aborting active stream.');
         abortControllerRef.current.abort();
+      }
+      if (reconnectTimeoutRef.current) {
+        window.clearTimeout(reconnectTimeoutRef.current);
       }
     };
   }, []);
 
   return {
-    steps,
+    workflowSteps,
     answers,
-    streamError,
     isStreaming,
-    isWorkflowComplete,
-    startWorkflow,
-    cancelWorkflow,
-    resetWorkflow,
+    isConnecting,
+    isCompleted,
+    error,
+    startWorkflowStream,
+    stopStream,
+    toggleStepExpansion,
   };
 };
