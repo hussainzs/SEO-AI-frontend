@@ -86,13 +86,6 @@ const AnswerDisplay: FC<AnswerDisplayProps> = ({ answers, isCompleted }) => {
 
   return (
     <div className="answer-display mt-8">
-      {/* Section header */}
-      <div className="flex items-center justify-between mb-6">
-        <div className="flex items-center gap-3">
-          <h2 className="text-xl font-semibold text-text">Workflow Results</h2>
-        </div>
-      </div>
-
       {/* Answers container */}
       <div className="space-y-4">
         {answers.map((answer: StoredAnswer, index: number) =>

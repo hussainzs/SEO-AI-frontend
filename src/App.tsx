@@ -1,5 +1,5 @@
 // src/App.tsx
-import { FC, useState } from 'react';
+import { FC, useState, useEffect } from 'react';
 import './index.css';
 
 import Header from './components/Header';
@@ -33,6 +33,18 @@ const App: FC = () => {
   const [submittedQuery, setSubmittedQuery] = useState<string | null>(null);
   // State to store user input validation error message
   const [inputError, setInputError] = useState<string | null>(null);
+
+  /**
+   * Effect to scroll to the top of the page when the workflow is completed and answers are displayed.
+   * This provides a better user experience by showing the results immediately.
+   */
+  useEffect(() => {
+    // Check if the workflow is completed and there are answers to display
+    if (isCompleted && answers.length > 0) {
+      // Scroll to the top of the page smoothly
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  }, [isCompleted, answers]); // Dependencies for the effect
 
   /**
    * Handles the analysis request from the user input form.
@@ -114,6 +126,9 @@ const App: FC = () => {
               isCompleted={isCompleted}
               onToggleStepExpansion={toggleStepExpansion}
             />
+
+            {/* Section separator: horizontal line between workflow and answers */}
+            <hr className="border-t border-separator" />
 
             {/* Display collected answers */}
             <AnswerDisplay answers={answers} isCompleted={isCompleted} />

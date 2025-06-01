@@ -102,7 +102,11 @@ const WorkflowStepCard: FC<WorkflowStepCardProps> = ({
         <div>
           {/* Header with expanded details */}
           <div className="flex items-start gap-4 mb-4">
-            <CircularPin status={getPinStatus()} />
+            {/* Pass isLoading to show loader when step is active and not completed */}
+            <CircularPin
+              status={getPinStatus()}
+              isLoading={step.isCurrent && !step.isCompleted}
+            />
             <div className="flex-1 min-w-0">
               <div className="flex justify-between items-start">
                 <div>
@@ -134,7 +138,11 @@ const WorkflowStepCard: FC<WorkflowStepCardProps> = ({
       ) : (
         /* Collapsed view with minimal information */
         <div className="flex items-center gap-3">
-          <CircularPin status={getPinStatus()} />
+          {/* Pass isLoading to show loader when step is active and not completed */}
+          <CircularPin
+            status={getPinStatus()}
+            isLoading={step.isCurrent && !step.isCompleted}
+          />
           <div className="flex-1 min-w-0">
             <div className="flex justify-between items-center">
               <h3 className="font-medium text-text">{step.nodeName}</h3>

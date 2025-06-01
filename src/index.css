@@ -17,6 +17,7 @@
   --color-contradicted-bg: rgba(185, 28, 28, 0.1);
   --color-additional: #1d4ed8;
   --color-additional-bg: rgba(29, 78, 216, 0.1);
+  --color-separator: rgba(61, 57, 41, 0.3);
 
   @keyframes fadeIn {
     from {
@@ -186,13 +187,13 @@ body {
   font-size: 0.875rem;
 }
 .workflow-show-more-btn {
-  font-size: 0.75rem;
-  color: var(--color-text-secondary);
+  font-size: 0.90rem;
+  color: var(--color-primary);
   cursor: pointer;
   transition: color 0.2s ease-in-out;
 }
 .workflow-show-more-btn:hover {
-  color: var(--color-text);
+  font-weight: bold;
 }
 /* ──────── Buttons ───────────────────────────────────────────────────────── */
 .btn {
