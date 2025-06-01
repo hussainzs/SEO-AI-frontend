@@ -39,7 +39,7 @@ const ShowMoreButton: FC<ShowMoreButtonProps> = ({
   return (
     <button
       onClick={onClick}
-      className={`card-toggle ${className}`}
+      className={`show-steps-toggle ${className}`}
       type="button"
     >
       <span className="workflow-show-more-btn">

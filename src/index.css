@@ -234,3 +234,8 @@ body {
          rounded-md hover:bg-primary-light transition-colors 
          cursor-pointer flex items-center gap-1;
 }
+.show-steps-toggle {
+  @apply text-2xl text-primary font-medium py-1 px-3 
+         rounded-md hover:bg-primary-light transition-colors 
+         cursor-pointer flex items-center gap-1;
+}

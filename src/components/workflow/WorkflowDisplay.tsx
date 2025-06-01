@@ -108,7 +108,6 @@ const WorkflowDisplay: FC<WorkflowDisplayProps> = ({
             onClick={() => setShowCompletedSteps(!showCompletedSteps)}
             expandedText="Show More"
             collapsedText="Hide Steps"
-            className="text-2xl text-text-primary"
           />
         )}
         {/* When not completed, show the step counter as before */}
