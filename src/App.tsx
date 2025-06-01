@@ -1,76 +1,140 @@
-// // src/App.tsx
-// import { FC, useState } from 'react'; // Added useState
-// import './index.css';
+// src/App.tsx
+import { FC, useState } from 'react';
+import './index.css';
 
-// import Header from './components/Header';
-// import UserInput from './components/UserInput';
-// import UserCard from './components/UserCard';
-// import OutputCard from './components/OutputCard'; // This is our revamped OutputCard
-// import { useChatStream } from './hooks/useChatStream';
+import Header from './components/Header';
+import UserInput from './components/UserInput';
+import UserCard from './components/UserCard';
+import WorkflowDisplay from './components/workflow/WorkflowDisplay';
+import AnswerDisplay from './components/workflow/AnswerDisplay';
+import ErrorMessageCard from './components/workflow/ErrorMessageCard';
+import { useWorkflowStream } from './hooks/useWorkflowStream';
 
-// const App: FC = () => {
-//   // Use our home made state of the art innovative custom hook to manage SSE state
-//   const {
-//     messages,
-//     isLoading,
-//     isConnecting,
-//     error: streamError, // alias error to streamError for clarity
-//     startStream,
-//   } = useChatStream();
+/**
+ * Main application component that orchestrates the workflow analysis interface.
+ * Manages user input, workflow execution, and result display using the workflow stream system.
+ *
+ * @returns JSX element representing the complete application
+ */
+const App: FC = () => {
+  // Use the workflow stream hook to manage workflow state and execution
+  const {
+    workflowSteps,
+    answers,
+    isStreaming,
+    isConnecting,
+    isCompleted,
+    error: streamError,
+    startWorkflowStream,
+    toggleStepExpansion,
+  } = useWorkflowStream();
 
-//   // State to store the user's submitted query to display in UserCard
-//   const [submittedQuery, setSubmittedQuery] = useState<string | null>(null);
+  // State to store the user's submitted query for display in UserCard
+  const [submittedQuery, setSubmittedQuery] = useState<string | null>(null);
+  // State to store user input validation error message
+  const [inputError, setInputError] = useState<string | null>(null);
 
-//   const handleAnalyze = async (text: string) => {
-//     setSubmittedQuery(text); // Store the query for display in UserCard component
-//     await startStream(text); // Initiate the SSE stream via the useChatStream hook
-//   };
+  /**
+   * Handles the analysis request from the user input form.
+   * Stores the query and initiates the workflow stream.
+   *
+   * @param text - The user's article content to analyze
+   */
+  const handleAnalyze = async (text: string): Promise<void> => {
+    // Count words in the input text
+    const wordCount = text.trim().split(/\s+/).length;
 
-//   return (
-//     <div className="flex flex-col min-h-screen">
-//       <Header />
+    // Check if input has at least 50 words
+    if (wordCount < 50) {
+      setInputError(
+        'Input should be more than 50 words for comprehensive output. Please input your entire article draft.'
+      );
+      return;
+    }
 
-//       <main className="flex flex-col flex-grow container mx-auto px-4 py-4 max-w-5xl">
-//         {/* Show UserInput form only if no query has been submitted yet */}
-//         {submittedQuery === null ? (
-//           <div className="flex flex-grow items-center">
-//             <UserInput
-//               onAnalyze={handleAnalyze}
-//               isLoading={
-//                 isLoading
-//               } /* Pass isLoading to disable button/input during stream */
-//             />
-//           </div>
-//         ) : (
-//           <>
-//             {/* Display the user's input query once submitted as a collapsable card through UserCard */}
-//             <UserCard content={submittedQuery} />
+    // Clear any previous error message
+    setInputError(null);
 
-//             {/* OutputCard now renders based on stream state and messages */}
-//             {/* Note the stream method from useChatStream is running and updating the messages state, isConnecting and streamError */}
-//             <OutputCard
-//               messages={messages}
-//               isConnecting={isConnecting}
-//               streamError={streamError}
-//             />
-//           </>
-//         )}
-//       </main>
-//     </div>
-//   );
-// };
+    try {
+      setSubmittedQuery(text); // Store the query for display in UserCard component
+      await startWorkflowStream(text); // Initiate the workflow stream via the useWorkflowStream hook
+    } catch (error) {
+      console.error('Error starting workflow analysis:', error);
+      // Error handling is managed by the useWorkflowStream hook
+    }
+  };
 
-// export default App;
+  /**
+   * Determines if the workflow is currently active (streaming or connecting).
+   */
+  const isWorkflowActive = (): boolean => {
+    return isStreaming || isConnecting;
+  };
 
-// ...existing code...
-import WorkflowStreamTester from './components/tester';
-
-function App() {
   return (
-    <div className="App">
-      <WorkflowStreamTester />
+    <div className="flex flex-col min-h-screen">
+      <Header />
+
+      <main className="flex flex-col flex-grow container mx-auto px-4 py-4 max-w-5xl">
+        {/* Show UserInput form only if no query has been submitted yet */}
+        {submittedQuery === null ? (
+          <div className="flex flex-grow items-center">
+            <div className="w-full">
+              {/* Display input validation error if any */}
+              {inputError && (
+                <div className="mb-4 p-3 bg-contradicted text-contradicted rounded border border-contradicted">
+                  {inputError}
+                </div>
+              )}
+              <UserInput
+                onAnalyze={handleAnalyze}
+                isLoading={isWorkflowActive()}
+              />
+            </div>
+          </div>
+        ) : (
+          <>
+            {/* Display the user's input query once submitted as a collapsible card */}
+            <UserCard content={submittedQuery} />
+
+            {/* Display stream connection errors */}
+            {streamError && (
+              <ErrorMessageCard
+                error={streamError}
+                title="Stream Connection Error"
+                isCritical={true}
+              />
+            )}
+
+            {/* Display workflow progress */}
+            <WorkflowDisplay
+              workflowSteps={workflowSteps}
+              isStreaming={isStreaming}
+              isConnecting={isConnecting}
+              isCompleted={isCompleted}
+              onToggleStepExpansion={toggleStepExpansion}
+            />
+
+            {/* Display collected answers */}
+            <AnswerDisplay answers={answers} isCompleted={isCompleted} />
+          </>
+        )}
+      </main>
     </div>
   );
-}
+};
 
 export default App;
+
+// just for testing purposes
+// import WorkflowStreamTester from './components/tester';
+
+// function App() {
+//   return (
+//     <div className="App">
+//       <WorkflowStreamTester />
+//     </div>
+//   );
+// }
+
+// export default App;
