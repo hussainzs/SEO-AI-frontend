@@ -79,7 +79,7 @@ export interface WorkflowStepState {
   internalContent: string[]; // Additional content items like entities extracted or search queries, from InternalContentEvent.content
   isCurrent: boolean; // True if this is the active step being processed or expecting updates
   isCompleted: boolean; // True if this step has finished processing (either succeeded or a new step started)
-  showDetails: boolean; // Controls individual card expansion state, especially after global collapse
+  showDetails: boolean; // Controls individual card expansion state
   isLoading: boolean; // Shows a loader on this specific card if it's current and new content is expected
 }
 

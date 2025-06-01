@@ -31,7 +31,8 @@ export interface UseWorkflowStreamResponse {
   streamError: string | null;
   isStreaming: boolean;
   isWorkflowComplete: boolean;
-  startWorkflow: (userArticle: string) => Promise<void>; // this is async function and returns a Promise to ensure consumers of the hook know they must await
+  // this is async function and returns a Promise to ensure consumers of the hook know they must await
+  startWorkflow: (userArticle: string) => Promise<void>;
   cancelWorkflow: () => void;
   resetWorkflow: () => void;
 }
@@ -92,7 +93,7 @@ export const useWorkflowStream = (): UseWorkflowStreamResponse => {
   const currentActiveStepIdRef = useRef<string | null>(null);
 
   /**
-   * Resets all hook state to initial values.
+   * Public method. Resets all hook state to initial values.
    * Called before starting a new workflow (indicated by empty dependency array) or on explicit reset.
    */
   const resetAllStates = useCallback((): void => {
@@ -196,7 +197,6 @@ export const useWorkflowStream = (): UseWorkflowStreamResponse => {
                       ...step.internalContent,
                       ...contentEvent.content,
                     ],
-                    isLoading: false,
                   }
                 : step
             )
@@ -316,6 +316,7 @@ export const useWorkflowStream = (): UseWorkflowStreamResponse => {
               const parsedEvent = JSON.parse(
                 eventMessage.data
               ) as WorkflowEvent;
+              // call the function to proceess the workflow event which will also update the state
               processWorkflowEvent(parsedEvent);
             } catch (parseError) {
               console.error(
