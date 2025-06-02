@@ -1,8 +1,8 @@
 import { FC } from 'react';
 import { StoredAnswer } from '../../types/workflowEvents';
-import KeywordAnalysisDisplay from './KeywordAnalysisDisplay';
-import SuggestionsDisplay from './SuggestionsDisplay';
-import CompetitorAnalysisDisplay from './CompetitorAnalysisDisplay';
+import KeywordAnalysisDisplay from './answers/KeywordAnalysisDisplay';
+import SuggestionsDisplay from './answers/SuggestionsDisplay';
+import CompetitorAnalysisDisplay from './answers/CompetitorAnalysisDisplay';
 
 /**
  * Interface for keyword data structure
