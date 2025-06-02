@@ -1,6 +1,38 @@
-// src/components/workflow/AnswerDisplay.tsx
-import React, { FC } from 'react';
+import { FC } from 'react';
 import { StoredAnswer } from '../../types/workflowEvents';
+import KeywordAnalysisDisplay from './KeywordAnalysisDisplay';
+import SuggestionsDisplay from './SuggestionsDisplay';
+import CompetitorAnalysisDisplay from './CompetitorAnalysisDisplay';
+
+/**
+ * Interface for keyword data structure
+ */
+interface KeywordData {
+  text: string;
+  monthly_search_volume: string;
+  competition: string;
+  competition_index: string;
+  rank: string;
+}
+
+/**
+ * Interface for primary/secondary keyword structure
+ */
+interface PrimaryKeywordData {
+  keyword: string;
+  reasoning: string;
+}
+
+/**
+ * Interface for competitor information
+ */
+interface CompetitorInfo {
+  rank: number;
+  url: string;
+  title: string;
+  published_date: string;
+  highlights: string;
+}
 
 /**
  * Props interface for the AnswerDisplay component.
@@ -14,7 +46,7 @@ interface AnswerDisplayProps {
 
 /**
  * AnswerDisplay component displays the accumulated answers from the workflow.
- * Shows answers as formatted JSON once the workflow is complete.
+ * Shows answers in formatted components once the workflow is complete.
  *
  * @param answers - Array of stored answers collected during workflow execution
  * @param isCompleted - Whether the workflow has completed successfully
@@ -30,67 +62,131 @@ const AnswerDisplay: FC<AnswerDisplayProps> = ({ answers, isCompleted }) => {
   }
 
   /**
-   * Format the answer data for display.
-   * Handles both string and object content appropriately.
+   * Extract data from different answer nodes for structured display
    */
-  const formatAnswerData = (data: Record<string, unknown>): string => {
-    try {
-      // Return data as plain text
-      return Object.entries(data)
-        .map(([key, value]) => `${key}: ${JSON.stringify(value)}`)
-        .join('\\n');
-    } catch (error) {
-      console.error('Error formatting answer data:', error);
-      return 'Error formatting answer data';
-    }
+  const extractAnswerData = (): {
+    keywordData: {
+      keywordMasterlist: KeywordData[];
+      primaryKeywords: PrimaryKeywordData[];
+      secondaryKeywords: PrimaryKeywordData[];
+    } | null;
+    suggestionsData: {
+      suggestedUrlSlug: string;
+      suggestedArticleHeadlines: string[];
+      finalAnswer: string;
+    } | null;
+    competitorData: {
+      competitiveAnalysis: string;
+      competitorInformation: CompetitorInfo[];
+    } | null;
+  } => {
+    // Initialize data structures for each answer type
+    let keywordData: {
+      keywordMasterlist: KeywordData[];
+      primaryKeywords: PrimaryKeywordData[];
+      secondaryKeywords: PrimaryKeywordData[];
+    } | null = null;
+
+    let suggestionsData: {
+      suggestedUrlSlug: string;
+      suggestedArticleHeadlines: string[];
+      finalAnswer: string;
+    } | null = null;
+
+    let competitorData: {
+      competitiveAnalysis: string;
+      competitorInformation: CompetitorInfo[];
+    } | null = null;
+
+    // Process each answer to extract relevant data
+    answers.forEach((answer: StoredAnswer) => {
+      const data = answer.data;
+
+      switch (answer.node) {
+        case 'Masterlist and Primary Keyword Generator':
+          keywordData = {
+            keywordMasterlist: (data.keyword_masterlist as KeywordData[]) || [],
+            primaryKeywords:
+              (data.primary_keywords as PrimaryKeywordData[]) || [],
+            secondaryKeywords:
+              (data.secondary_keywords as PrimaryKeywordData[]) || [],
+          };
+          break;
+
+        case 'Suggestions Generator':
+          suggestionsData = {
+            suggestedUrlSlug: (data.suggested_url_slug as string) || '',
+            suggestedArticleHeadlines:
+              (data.suggested_article_headlines as string[]) || [],
+            finalAnswer: (data.final_answer as string) || '',
+          };
+          break;
+
+        case 'Competitor Analysis':
+          competitorData = {
+            competitiveAnalysis: (data.competitive_analysis as string) || '',
+            competitorInformation:
+              (data.competitor_information as CompetitorInfo[]) || [],
+          };
+          break;
+
+        default:
+          console.warn(`Unknown answer node: ${answer.node}`);
+          break;
+      }
+    });
+
+    return { keywordData, suggestionsData, competitorData };
   };
 
-  /**
-   * Render an individual answer card.
-   */
-  const renderAnswerCard = (
-    answer: StoredAnswer,
-    index: number
-  ): React.JSX.Element => {
-    return (
-      <div
-        key={index}
-        className="bg-white p-6 rounded-lg shadow-md border border-border animate-slide-in"
-        style={{ animationDelay: `${index * 0.1}s` }}
-      >
-        {/* Answer header */}
-        <div className="flex justify-between items-start mb-4">
-          <div className="flex items-center gap-2">
-            <span className="tag-ai">AI</span>
-            <div>
-              <h4 className="font-semibold text-lg text-text">
-                Answer from: {answer.node}
-              </h4>
-              <p className="text-sm text-text-secondary">
-                Received at: {answer.receivedAt.toLocaleTimeString()}
-              </p>
-            </div>
-          </div>
-        </div>
-
-        {/* Answer content */}
-        <div className="bg-light-bg p-4 rounded-md border border-border">
-          <h5 className="font-medium text-text mb-2 text-sm">Answer Data:</h5>
-          <pre className="text-sm bg-white p-4 rounded-md overflow-x-auto text-text border border-border whitespace-pre-wrap">
-            {formatAnswerData(answer.data)}
-          </pre>
-        </div>
-      </div>
-    );
-  };
+  const { keywordData, suggestionsData, competitorData } = extractAnswerData();
 
   return (
     <div className="answer-display mt-8">
-      {/* Answers container */}
-      <div className="space-y-4">
-        {answers.map((answer: StoredAnswer, index: number) =>
-          renderAnswerCard(answer, index)
-        )}
+      {/* Main Answer Box with AI Pin */}
+      <div className="bg-white p-6 rounded-lg shadow-md border border-border animate-slide-in">
+        {/* Answer header */}
+        <div className="flex items-center gap-2 mb-6">
+          <span className="tag-ai">AI</span>
+          <div>
+            <h2 className="text-2xl font-bold text-text">Analysis Results</h2>
+          </div>
+        </div>
+
+        {/* Answer content sections */}
+        <div className="space-y-8">
+          {/* 1. Keyword Analysis Section */}
+          {keywordData && (
+            <KeywordAnalysisDisplay
+              keywordMasterlist={keywordData.keywordMasterlist}
+              primaryKeywords={keywordData.primaryKeywords}
+              secondaryKeywords={keywordData.secondaryKeywords}
+            />
+          )}
+
+          {/* 2. Suggestions Section */}
+          {suggestionsData && (
+            <div className="border-t border-separator pt-8">
+              <SuggestionsDisplay
+                suggestedUrlSlug={suggestionsData.suggestedUrlSlug}
+                suggestedArticleHeadlines={
+                  suggestionsData.suggestedArticleHeadlines
+                }
+                finalAnswer={suggestionsData.finalAnswer}
+              />
+            </div>
+          )}
+
+          {/* 3. Competitor Analysis Section */}
+          {competitorData && (
+            <div className="border-t border-separator pt-8">
+              <CompetitorAnalysisDisplay
+                competitiveAnalysis={competitorData.competitiveAnalysis}
+                competitorInformation={competitorData.competitorInformation}
+              />
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Loading state for incomplete workflows */}

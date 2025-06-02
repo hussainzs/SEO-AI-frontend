@@ -8,9 +8,9 @@ This project uses [Vite](https://vitejs.dev/), [React](https://react.dev/), [Typ
 
 ### Prerequisites
 
-*   [Node.js](https://nodejs.org/) (version 18 or later recommended)
-*   [npm](https://www.npmjs.com/) (usually comes with Node.js) or [yarn](https://yarnpkg.com/)
-*   [Git](https://git-scm.com/)
+- [Node.js](https://nodejs.org/) (version 18 or later recommended)
+- [npm](https://www.npmjs.com/) (usually comes with Node.js) or [yarn](https://yarnpkg.com/)
+- [Git](https://git-scm.com/)
 
 ### Cloning the Repository
 
@@ -89,6 +89,7 @@ This project uses [Vite](https://vitejs.dev/), [React](https://react.dev/), [Typ
 
   - **components/**  
     React components for the UI:
+
     - `Header.tsx`: Top navigation/header bar.
     - `UserInput.tsx`: Text area and submit button for user queries.
     - `UserCard.tsx`: Collapsible card displaying the user's submitted query; can be expanded to show the full text.
@@ -102,10 +103,12 @@ This project uses [Vite](https://vitejs.dev/), [React](https://react.dev/), [Typ
 
   - **hooks/**  
     Custom React hooks:
+
     - `useChatStream.ts`: Manages the Server-Sent Events (SSE) connection to the backend, handles streaming AI responses, and manages related state.
 
   - **types/**  
     TypeScript type definitions:
+
     - `chatEventTypes.ts`: Defines the structure of messages exchanged with the AI backend.
 
   - `App.tsx`: Main application component; orchestrates user input, displays the user's query, and renders AI output.
@@ -113,5 +116,5 @@ This project uses [Vite](https://vitejs.dev/), [React](https://react.dev/), [Typ
   - `index.css`: Tailwind CSS and custom styles following tailwind v4 styles.
   - `vite-env.d.ts`: Vite-specific TypeScript declarations.
 
-- **Configuration Files**  
+- **Configuration Files**
   - `package.json`, `tsconfig*.json`, `vite.config.ts`, `eslint.config.js`, `.prettierrc.json`: Project configuration for build, linting, formatting, and dependencies.
