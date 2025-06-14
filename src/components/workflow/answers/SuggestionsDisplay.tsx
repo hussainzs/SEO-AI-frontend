@@ -150,7 +150,7 @@ const SuggestionsDisplay: FC<SuggestionsDisplayProps> = ({
 
         <div className="prose prose-sm max-w-none answer-content-text finalized-suggestions-text">
           <ReactMarkdown
-            remarkPlugins={[remarkGfm, remarkBreaks]} // include remarkBreaks here
+            remarkPlugins={[remarkGfm, remarkBreaks]}
             components={{
               // Custom styling for markdown elements to match our design system
               h1: ({ children }) => (

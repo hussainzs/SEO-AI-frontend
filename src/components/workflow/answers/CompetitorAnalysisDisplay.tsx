@@ -1,6 +1,7 @@
 import React, { FC, useState } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
+import remarkBreaks from 'remark-breaks';
 import { ExternalLink, Calendar, Award, Globe } from 'lucide-react';
 
 /**
@@ -112,7 +113,7 @@ const CompetitorAnalysisDisplay: FC<CompetitorAnalysisDisplayProps> = ({
         <div className="bg-white border border-border rounded-md p-6">
           <div className="prose prose-sm max-w-none answer-content-text">
             <ReactMarkdown
-              remarkPlugins={[remarkGfm]}
+              remarkPlugins={[remarkGfm, remarkBreaks]}
               components={{
                 // Custom styling for markdown elements
                 h1: ({ children }) => (

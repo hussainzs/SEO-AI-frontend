@@ -76,7 +76,8 @@ export const useWorkflowStream = (): UseWorkflowStreamReturn => {
     const nodeNameMappings: Record<string, string> = {
       'Entity Extractor': 'Seed Keywords Extractor',
       'Query Generator': 'Web Search Query Generator',
-      'Masterlist and Primary Keyword Generator': 'Primary and Secondary Keywords Generator',
+      'Masterlist and Primary Keyword Generator':
+        'Primary and Secondary Keywords Generator',
       'Suggestions Generator': 'Customized Suggestions Generator',
     };
 
