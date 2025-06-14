@@ -1,5 +1,6 @@
 import React, { FC } from 'react';
 import { TrendingUp, Target, Search } from 'lucide-react';
+import InfoTooltip from '../../common/InfoTooltip';
 
 /**
  * Interface for keyword data structure
@@ -106,20 +107,34 @@ const KeywordAnalysisDisplay: FC<KeywordAnalysisDisplayProps> = ({
               {keyword.text}
             </h4>
           </div>
-          <span
-            className={`px-3 py-1 rounded-full text-xs font-medium ${getCompetitionTextColor(keyword.competition)}`}
-          >
-            {keyword.competition || 'N/A'}
-          </span>
+          <div className="flex items-center gap-2">
+            <span className="text-xs text-text-secondary font-medium">
+              Competition Level:
+            </span>
+            <InfoTooltip
+              description="The amount of advertisers bidding on each keyword determines the level of competition (low, medium, or high). When Competition for a term is high (i.e., more advertisers are bidding on that keyword), you must bid high to get top places."
+              size={12}
+            />
+            <span
+              className={`px-3 py-1 rounded-full text-xs font-medium ${getCompetitionTextColor(keyword.competition)}`}
+            >
+              {keyword.competition || 'N/A'}
+            </span>
+          </div>
         </div>
-
         {/* Search volume visualization */}
         <div className="space-y-2">
           <div className="flex items-center justify-between answer-content-text">
-            <span className="text-text-secondary flex items-center gap-1">
-              <Search size={14} />
-              Monthly Searches
-            </span>
+            <div className="flex items-center gap-2">
+              <span className="text-text-secondary flex items-center gap-1">
+                <Search size={14} />
+                Monthly Searches
+              </span>
+              <InfoTooltip
+                description="The average monthly search volume for this keyword in the past year. Some keywords have seasonality - refer to the description of primary and secondary keywords to understand if those keywords had seasonality."
+                size={12}
+              />
+            </div>
             <span className="font-semibold text-text">
               {searchVolume.toLocaleString()}
             </span>
@@ -132,10 +147,15 @@ const KeywordAnalysisDisplay: FC<KeywordAnalysisDisplayProps> = ({
               style={{ width: `${barWidth}%` }}
             />
           </div>
-
           {/* Competition index */}
           <div className="flex items-center justify-between text-sm text-text-secondary">
-            <span>Competition Index: {keyword.competition_index}</span>
+            <div className="flex items-center gap-2">
+              <span>Competition Index: {keyword.competition_index}</span>
+              <InfoTooltip
+                description="Shows how competitive ad placement is for a keyword, specific to location = USA and search network = Google Search. The level of competition from 0-100 is determined by the number of ad slots filled divided by the total number of ad slots available. Extremely low competition, i.e. 1, or slightly below medium competitiveness, i.e. 32."
+                size={12}
+              />
+            </div>
             <span>{barWidth.toFixed(1)}% of max volume</span>
           </div>
         </div>

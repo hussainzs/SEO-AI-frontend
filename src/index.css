@@ -142,7 +142,6 @@ body {
 .answer-content-text li {
   /* Ensure paragraphs and list items within answer content also get base styling */
   font-size: 1rem;
-  color: var(--color-text);
   line-height: 1.6;
 }
 
@@ -315,4 +314,33 @@ body {
   @apply text-2xl text-primary font-medium py-1 px-3 
          rounded-md hover:bg-primary-light transition-colors 
          cursor-pointer flex items-center gap-1;
+}
+
+/* ──────── Info Tooltip Styles ────────────────────────────────────────── */
+.info-tooltip-container {
+  @apply relative inline-block;
+}
+
+.info-tooltip-trigger {
+  @apply cursor-help;
+}
+
+.info-tooltip-content {
+  @apply absolute z-50 px-3 py-2 text-sm text-white bg-text rounded-md shadow-lg;
+  @apply bottom-full left-1/2 transform -translate-x-1/2 mb-2;
+  @apply min-w-48 max-w-64;
+  animation: fadeIn 0.2s ease-in-out;
+}
+
+.info-tooltip-arrow {
+  @apply absolute top-full left-1/2 transform -translate-x-1/2;
+  @apply w-0 h-0;
+  border-left: 5px solid transparent;
+  border-right: 5px solid transparent;
+  border-top: 5px solid var(--color-text);
+}
+
+.info-tooltip-text {
+  @apply text-sm leading-relaxed;
+  line-height: 1.4;
 }

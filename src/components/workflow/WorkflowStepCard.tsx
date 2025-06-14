@@ -59,7 +59,6 @@ const WorkflowStepCard: FC<WorkflowStepCardProps> = ({
       </div>
     );
   };
-
   /**
    * Render the internal content items as individual sub-cards.
    * Each item appears with a slide-in animation.
@@ -71,9 +70,6 @@ const WorkflowStepCard: FC<WorkflowStepCardProps> = ({
 
     return (
       <div className="mt-4">
-        <div className="text-sm font-medium text-text-secondary mb-2">
-          Live Updates ({step.internalContent.length}):
-        </div>
         <div className="space-y-2">
           {step.internalContent.map((content: string, index: number) => (
             <div
@@ -81,12 +77,7 @@ const WorkflowStepCard: FC<WorkflowStepCardProps> = ({
               className="workflow-internal-item animate-slide-in-left"
               style={{ animationDelay: `${index * 0.1}s` }}
             >
-              <div className="flex items-start justify-between">
-                <span className="flex-1 min-w-0">{content}</span>
-                <span className="text-xs text-text-secondary ml-2 whitespace-nowrap">
-                  #{index + 1}
-                </span>
-              </div>
+              <span className="flex-1 min-w-0">{content}</span>
             </div>
           ))}
         </div>
