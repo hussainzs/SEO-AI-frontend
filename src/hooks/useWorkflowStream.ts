@@ -65,6 +65,26 @@ export const useWorkflowStream = (): UseWorkflowStreamReturn => {
   const RECONNECT_DELAY = 5000; // 5 seconds
 
   /**
+   * Maps backend node names to user-friendly display names.
+   * This allows us to customize how workflow steps are displayed in the UI
+   * without changing the backend implementation.
+   *
+   * @param nodeName - The original node name from the backend
+   * @returns The display name to show in the UI
+   */
+  const getDisplayNodeName = useCallback((nodeName: string): string => {
+    const nodeNameMappings: Record<string, string> = {
+      'Entity Extractor': 'Seed Keywords Extractor',
+      'Query Generator': 'Web Search Query Generator',
+      'Masterlist and Primary Keyword Generator': 'Primary and Secondary Keywords Generator',
+      'Suggestions Generator': 'Customized Suggestions Generator',
+    };
+
+    // Return the mapped name if it exists, otherwise return the original name
+    return nodeNameMappings[nodeName] || nodeName;
+  }, []);
+
+  /**
    * Generates a unique identifier for workflow steps using node name and timestamp.
    * Ensures uniqueness for each step.
    *
@@ -75,12 +95,11 @@ export const useWorkflowStream = (): UseWorkflowStreamReturn => {
     // Use node name and current timestamp for uniqueness
     return `${nodeName}-${Date.now()}`;
   }, []);
-
   /**
    * Creates a new workflow step state object with default values.
    * Called when receiving an "internal" event with "new" status.
    *
-   * @param nodeName - Name of the workflow node
+   * @param nodeName - Name of the workflow node from the backend
    * @param content - Initial content for the step
    * @returns New WorkflowStepState object
    */
@@ -88,7 +107,7 @@ export const useWorkflowStream = (): UseWorkflowStreamReturn => {
     (nodeName: string, content: string): WorkflowStepState => {
       return {
         id: generateStepId(nodeName),
-        nodeName,
+        nodeName: getDisplayNodeName(nodeName), // Apply display name mapping
         content,
         internalContent: [],
         isCurrent: true, // set this to true as this is the latest step
@@ -97,7 +116,7 @@ export const useWorkflowStream = (): UseWorkflowStreamReturn => {
         isLoading: true,
       };
     },
-    [generateStepId]
+    [generateStepId, getDisplayNodeName]
   );
 
   /**
