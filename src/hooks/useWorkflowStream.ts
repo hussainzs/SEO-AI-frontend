@@ -6,8 +6,8 @@ import {
 } from '../types/workflowEvents';
 
 // API endpoint for the keyword agent stream
-// const API_ENDPOINT = 'http://127.0.0.1:8000/agent/keyword/stream';
-const API_ENDPOINT = 'http://127.0.0.1:8000/api/test/keyword/stream'; // testing endpoint
+const API_ENDPOINT = 'http://127.0.0.1:8000/agent/keyword/stream';
+// const API_ENDPOINT = 'http://127.0.0.1:8000/api/test/keyword/stream'; // testing endpoint
 
 /**
  * Request interface matching the backend's expected structure

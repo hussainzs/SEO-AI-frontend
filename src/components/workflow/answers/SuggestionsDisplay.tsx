@@ -13,8 +13,8 @@ import {
 
 // API configuration constants - can be modified later
 const API_BASE_URL: string = 'http://127.0.0.1:8000';
-// const FULL_ARTICLE_ENDPOINT: string = '/agent/suggestfullarticle/';
-const FULL_ARTICLE_ENDPOINT: string = '/api/test/keyword/suggestfullarticle'; // test endpoint
+const FULL_ARTICLE_ENDPOINT: string = '/agent/suggestfullarticle/';
+// const FULL_ARTICLE_ENDPOINT: string = '/api/test/keyword/suggestfullarticle'; // test endpoint
 
 /**
  * Types for the tab functionality

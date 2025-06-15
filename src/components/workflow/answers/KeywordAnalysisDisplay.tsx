@@ -1,6 +1,9 @@
 import React, { FC } from 'react';
 import { TrendingUp, Target, Search } from 'lucide-react';
 import InfoTooltip from '../../common/InfoTooltip';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
+import remarkBreaks from 'remark-breaks';
 
 /**
  * Interface for keyword data structure
@@ -188,9 +191,25 @@ const KeywordAnalysisDisplay: FC<KeywordAnalysisDisplayProps> = ({
               <h4 className="font-semibold answer-content-text text-lg text-primary mb-2">
                 {keyword.keyword}
               </h4>
-              <p className="answer-content-text text-text-secondary leading-relaxed">
-                {keyword.reasoning}
-              </p>
+              <div className="prose prose-sm max-w-none answer-content-text">
+                <ReactMarkdown
+                  remarkPlugins={[remarkGfm, remarkBreaks]}
+                  components={{
+                    p: ({ children }) => (
+                      <p className="answer-content-text mb-3 leading-relaxed">
+                        {children}
+                      </p>
+                    ),
+                    strong: ({ children }) => (
+                      <strong className="font-semibold text-text">
+                        {children}
+                      </strong>
+                    ),
+                  }}
+                >
+                  {keyword.reasoning}
+                </ReactMarkdown>
+              </div>
             </div>
           ))}
         </div>
